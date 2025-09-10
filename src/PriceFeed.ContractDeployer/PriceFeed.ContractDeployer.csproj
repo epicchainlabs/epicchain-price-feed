@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo" Version="3.8.2" />
+    <PackageReference Include="EpicChain.Network.RPC.RpcClient" Version="3.8.2" />
+  </ItemGroup>
+
+</Project>

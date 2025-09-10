@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>PriceFeed.R3E.Contract</RootNamespace>
+    <AssemblyName>PriceFeed.R3E.Contract</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="R3E.Compiler.CSharp" Version="1.0.0-*" />
+    <PackageReference Include="R3E.SmartContract.Framework" Version="1.0.0-*" />
+  </ItemGroup>
+
+  <Target Name="R3ECompile" AfterTargets="Build">
+    <Message Text="Compiling R3E Smart Contract..." Importance="high" />
+    <Exec Command="r3e-compiler compile -p $(MSBuildProjectFullPath) -o $(OutputPath)" />
+  </Target>
+
+</Project>

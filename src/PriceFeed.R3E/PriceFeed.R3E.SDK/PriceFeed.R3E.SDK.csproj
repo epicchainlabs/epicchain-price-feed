@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <PackageId>PriceFeed.R3E.SDK</PackageId>
+    <Title>R3E PriceFeed Oracle SDK</Title>
+    <Description>SDK for integrating with the R3E-optimized PriceFeed Oracle on Neo N3</Description>
+    <Authors>NeoBurger</Authors>
+    <Company>R3E Network</Company>
+    <Product>R3E PriceFeed Oracle</Product>
+    <PackageTags>EpicChain;blockchain;oracle;pricefeed;r3e</PackageTags>
+    <PackageProjectUrl>https://github.com/r3e-network/neo-price-feed</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/r3e-network/neo-price-feed</RepositoryUrl>
+    <Version>2.0.0</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo" Version="3.8.2" />
+    <PackageReference Include="EpicChain.Network.RPC.RpcClient" Version="3.8.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.1" />
+  </ItemGroup>
+
+</Project>

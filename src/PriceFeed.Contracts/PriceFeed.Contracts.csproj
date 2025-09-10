@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\PriceFeed.Core\PriceFeed.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo" Version="3.7.6" />
+    <PackageReference Include="EpicChain.SmartContract.Framework" Version="3.8.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- Add Neo compiler integration -->
+  <Target Name="PostBuild" AfterTargets="Build">
+    <Message Text="Start NeoContract converter, Source File: $(ProjectPath)" Importance="high"></Message>
+    <Exec Command="nccs &quot;$(ProjectPath)&quot;" />
+  </Target>
+
+</Project>

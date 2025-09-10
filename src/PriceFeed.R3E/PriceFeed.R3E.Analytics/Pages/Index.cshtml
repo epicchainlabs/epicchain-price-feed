@@ -1,0 +1,253 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "R3E PriceFeed Analytics";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metric-card {
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        .header-logo {
+            background: linear-gradient(45deg, #1976d2, #42a5f5);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-logo">
+        <div class="container">
+            <h1 class="text-center">🔍 R3E PriceFeed Analytics Dashboard</h1>
+            <p class="text-center mb-0">Real-time monitoring of Neo N3 Price Oracle Contract</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats Overview -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Total Events</h5>
+                        <div class="metric-value" id="totalEvents">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Price Updates</h5>
+                        <div class="metric-value" id="priceUpdates">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Last Update</h5>
+                        <div class="metric-value" id="lastUpdate" style="font-size: 1rem;">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Status</h5>
+                        <div class="metric-value" id="status">🟢 Active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Charts -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Price History</h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" onclick="loadPriceHistory('BTCUSDT')">BTC</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="loadPriceHistory('ETHUSDT')">ETH</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="loadPriceHistory('NEOUSDT')">NEO</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="loadPriceHistory('GASUSDT')">GAS</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="priceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Events -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Recent Events</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Event</th>
+                                        <th>Timestamp</th>
+                                        <th>Transaction</th>
+                                        <th>Block</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentEvents">
+                                    <tr>
+                                        <td colspan="4" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let priceChart;
+
+        // Load dashboard data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadRecentEvents();
+            initPriceChart();
+            loadPriceHistory('BTCUSDT');
+
+            // Refresh data every 30 seconds
+            setInterval(() => {
+                loadStats();
+                loadRecentEvents();
+            }, 30000);
+        });
+
+        function loadStats() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalEvents').textContent = data.totalEvents.toLocaleString();
+                    document.getElementById('priceUpdates').textContent = data.priceUpdates.toLocaleString();
+                    
+                    if (data.lastUpdate) {
+                        const lastUpdate = new Date(data.lastUpdate);
+                        document.getElementById('lastUpdate').textContent = lastUpdate.toLocaleString();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading stats:', error);
+                    document.getElementById('status').innerHTML = '🔴 Error';
+                });
+        }
+
+        function loadRecentEvents() {
+            fetch('/api/events/recent?limit=10')
+                .then(response => response.json())
+                .then(events => {
+                    const tbody = document.getElementById('recentEvents');
+                    tbody.innerHTML = '';
+
+                    events.forEach(event => {
+                        const row = tbody.insertRow();
+                        row.innerHTML = `
+                            <td><span class="badge bg-primary">${event.eventName}</span></td>
+                            <td>${new Date(event.timestamp).toLocaleString()}</td>
+                            <td><code>${event.transactionHash.substring(0, 10)}...</code></td>
+                            <td>${event.blockIndex.toLocaleString()}</td>
+                        `;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading events:', error);
+                });
+        }
+
+        function initPriceChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Price (USD)',
+                        data: [],
+                        borderColor: '#1976d2',
+                        backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Price History (7 Days)'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadPriceHistory(symbol) {
+            // Update active button
+            document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            fetch(`/api/prices/history/${symbol}?days=7`)
+                .then(response => response.json())
+                .then(prices => {
+                    const labels = prices.map(p => new Date(p.timestamp).toLocaleDateString());
+                    const data = prices.map(p => parseFloat(p.price) / 100000000); // Convert from 8 decimals
+
+                    priceChart.data.labels = labels;
+                    priceChart.data.datasets[0].data = data;
+                    priceChart.data.datasets[0].label = `${symbol} Price (USD)`;
+                    priceChart.update();
+                })
+                .catch(error => {
+                    console.error('Error loading price history:', error);
+                });
+        }
+    </script>
+</body>
+</html>

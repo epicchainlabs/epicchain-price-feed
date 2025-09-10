@@ -1,0 +1,36 @@
+# Prometheus configuration for Neo N3 Price Feed monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+scrape_configs:
+  # Neo Price Feed Application
+  - job_name: 'neo-price-feed'
+    static_configs:
+      - targets: ['price-feed:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Optional: Neo node monitoring (if available)
+  - job_name: 'neo-node'
+    static_configs:
+      - targets: ['seed1t5.neo.org:20332']
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093

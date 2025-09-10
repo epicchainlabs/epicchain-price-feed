@@ -1,0 +1,29 @@
+{
+  "magic": 5195086,
+  "address-version": 53,
+  "consensus-nodes": [
+    {
+      "tcp-port": 20333,
+      "ws-port": 20334,
+      "rpc-port": 20332,
+      "wallet": {
+        "name": "node1",
+        "accounts": [
+          {
+            "private-key": "KxDgvEKzgSBPPfuVfw67oPQBSjidEiqTHURKSDL1R7yGaGYAeYnr",
+            "script-hash": "NhGxW6LkTHrGAKcEV8u1TZFvBs9aNZcxZT",
+            "label": "node1",
+            "is-default": true,
+            "contract": {
+              "script": "DCECs2Ir9AF73+MXxYrtX0x1PyBrfbiWBG+n13S7xL9/jcILQZVEDXg=",
+              "parameters": [
+                "Signature"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "wallets": []
+}

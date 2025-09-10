@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  # R3E development environment
+  r3e-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build-env
+    container_name: r3e-pricefeed-dev
+    volumes:
+      - ./:/app
+      - r3e-nuget-cache:/root/.nuget/packages
+    working_dir: /app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    environment:
+      - DOTNET_CLI_TELEMETRY_OPTOUT=1
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  # R3E contract compiler
+  r3e-compiler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build-env
+    container_name: r3e-pricefeed-compiler
+    volumes:
+      - ./PriceFeed.R3E.Contract:/app/contract
+      - ./build-output:/app/output
+    working_dir: /app
+    command: >
+      bash -c "
+        dotnet build contract/PriceFeed.R3E.Contract.csproj -c Release &&
+        cp -r contract/bin/sc/* output/
+      "
+
+  # R3E test runner
+  r3e-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build-env
+    container_name: r3e-pricefeed-tests
+    volumes:
+      - ./:/app
+      - r3e-test-results:/app/TestResults
+    working_dir: /app
+    command: >
+      dotnet test PriceFeed.R3E.Tests/PriceFeed.R3E.Tests.csproj 
+      --logger "trx;LogFileName=test-results.trx" 
+      --collect:"XPlat Code Coverage"
+
+  # R3E benchmark runner
+  r3e-benchmarks:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build-env
+    container_name: r3e-pricefeed-benchmarks
+    volumes:
+      - ./:/app
+      - r3e-benchmark-results:/app/BenchmarkDotNet.Artifacts
+    working_dir: /app
+    command: dotnet run --project PriceFeed.R3E.Benchmarks/PriceFeed.R3E.Benchmarks.csproj -c Release
+
+  # R3E deployment tool
+  r3e-deploy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: r3e-pricefeed-deploy
+    environment:
+      - Deployment__Network=${NETWORK:-TestNet}
+      - Deployment__RpcEndpoint=${RPC_ENDPOINT:-http://seed1t5.neo.org:20332}
+      - Deployment__ContractHash=${CONTRACT_HASH}
+      - Deployment__DeployerWif=${DEPLOYER_WIF}
+      - Initialization__OwnerAddress=${OWNER_ADDRESS}
+      - Initialization__TeeAccountAddress=${TEE_ACCOUNT_ADDRESS}
+    volumes:
+      - ./deployment-output:/app/deployment-output
+    command: ${DEPLOY_COMMAND:-verify}
+
+  # Neo node for local testing
+  neo-node:
+    image: cityofzion/neo-local:latest
+    container_name: neo-local-node
+    ports:
+      - "20332:20332" # RPC
+      - "20333:20333" # P2P
+    environment:
+      - SKIP_PREFUND=false
+    volumes:
+      - neo-chain-data:/neo-cli/Chain_00000000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:20332"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # R3E contract monitor
+  r3e-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.monitor
+    container_name: r3e-pricefeed-monitor
+    depends_on:
+      - neo-node
+    environment:
+      - CONTRACT_HASH=${CONTRACT_HASH}
+      - RPC_ENDPOINT=http://neo-node:20332
+    volumes:
+      - ./monitoring-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  r3e-nuget-cache:
+  r3e-test-results:
+  r3e-benchmark-results:
+  neo-chain-data:
+
+networks:
+  default:
+    name: r3e-pricefeed-network

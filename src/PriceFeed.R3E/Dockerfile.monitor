@@ -1,0 +1,87 @@
+# R3E Contract Monitor
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+WORKDIR /src
+
+# Create monitoring project
+RUN dotnet new console -n ContractMonitor
+WORKDIR /src/ContractMonitor
+
+# Add required packages
+RUN dotnet add package Neo --version 3.8.2 && \
+    dotnet add package EpicChain.Network.RPC.RpcClient --version 3.8.2 && \
+    dotnet add package Microsoft.Extensions.Logging.Console --version 8.0.0 && \
+    dotnet add package Newtonsoft.Json --version 13.0.3
+
+# Create monitoring code
+RUN cat > Program.cs << 'EOF'
+using System;
+using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
+using EpicChain;
+using EpicChain.Network.RPC;
+using EpicChain.SmartContract;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        var contractHash = Environment.GetEnvironmentVariable("CONTRACT_HASH") ?? "";
+        var rpcEndpoint = Environment.GetEnvironmentVariable("RPC_ENDPOINT") ?? "http://localhost:20332";
+        
+        using var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddConsole().SetMinimumLevel(LogLevel.Information);
+        });
+        
+        var logger = loggerFactory.CreateLogger<Program>();
+        logger.LogInformation("Starting R3E Contract Monitor");
+        logger.LogInformation("Contract: {ContractHash}", contractHash);
+        logger.LogInformation("RPC: {RpcEndpoint}", rpcEndpoint);
+        
+        var client = new RpcClient(new Uri(rpcEndpoint));
+        var scriptHash = UInt160.Parse(contractHash);
+        
+        while (true)
+        {
+            try
+            {
+                // Monitor contract state
+                var contractState = await client.GetContractStateAsync(contractHash);
+                if (contractState != null)
+                {
+                    logger.LogInformation("Contract {Name} is active", contractState.Manifest.Name);
+                    
+                    // Check recent events
+                    var currentBlock = await client.GetBlockCountAsync();
+                    var logs = await client.GetApplicationLogAsync(contractHash);
+                    
+                    logger.LogInformation("Current block: {Block}", currentBlock);
+                }
+                else
+                {
+                    logger.LogWarning("Contract not found");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Monitor error");
+            }
+            
+            await Task.Delay(TimeSpan.FromSeconds(30));
+        }
+    }
+}
+EOF
+
+# Build
+RUN dotnet build -c Release
+
+# Runtime
+FROM mcr.microsoft.com/dotnet/runtime:8.0
+WORKDIR /app
+COPY --from=build /src/ContractMonitor/bin/Release/net8.0/ ./
+ENTRYPOINT ["dotnet", "ContractMonitor.dll"]

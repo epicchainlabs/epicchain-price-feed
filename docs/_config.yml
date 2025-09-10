@@ -1,0 +1,9 @@
+remote_theme: pages-themes/cayman@v0.2.0
+plugins:
+- jekyll-remote-theme
+
+title: Neo Price Feed
+description: A production-ready price feed service for Neo blockchain
+show_downloads: true
+google_analytics:
+theme: jekyll-theme-cayman

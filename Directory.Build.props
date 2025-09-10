@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Exclude the contract project from the build -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);PriceFeed.Contracts/**/*</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

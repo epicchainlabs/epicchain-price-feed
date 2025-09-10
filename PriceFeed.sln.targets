@@ -1,0 +1,7 @@
+<Project>
+  <Target Name="SkipContractProject" BeforeTargets="Build">
+    <ItemGroup>
+      <ProjectReference Remove="PriceFeed.Contracts\PriceFeed.Contracts.csproj" />
+    </ItemGroup>
+  </Target>
+</Project>

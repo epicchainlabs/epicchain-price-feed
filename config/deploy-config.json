@@ -1,0 +1,46 @@
+{
+  "networks": {
+    "testnet": {
+      "rpcEndpoint": "https://testnet1.neo.coz.io:443",
+      "networkMagic": 894710606,
+      "description": "Neo N3 TestNet"
+    },
+    "mainnet": {
+      "rpcEndpoint": "https://mainnet1.neo.coz.io:443",
+      "networkMagic": 860833102,
+      "description": "Neo N3 MainNet"
+    },
+    "local": {
+      "rpcEndpoint": "http://localhost:10332",
+      "networkMagic": 5195086,
+      "description": "Local Neo Express instance"
+    }
+  },
+  "deployment": {
+    "contractPath": "PriceFeed.Contracts/PriceOracleContract.nef",
+    "manifestPath": "PriceFeed.Contracts/PriceOracleContract.manifest.json",
+    "initializationParams": {
+      "comment": "Owner and TEE account addresses must be provided during deployment"
+    }
+  },
+  "security": {
+    "requiredEnvironmentVariables": [
+      "NEO_RPC_ENDPOINT",
+      "CONTRACT_SCRIPT_HASH",
+      "TEE_ACCOUNT_ADDRESS",
+      "TEE_ACCOUNT_PRIVATE_KEY",
+      "MASTER_ACCOUNT_ADDRESS",
+      "MASTER_ACCOUNT_PRIVATE_KEY"
+    ],
+    "optionalEnvironmentVariables": [
+      "BINANCE_API_KEY",
+      "BINANCE_API_SECRET",
+      "COINMARKETCAP_API_KEY",
+      "COINBASE_API_KEY",
+      "COINBASE_API_SECRET",
+      "OKEX_API_KEY",
+      "OKEX_API_SECRET",
+      "OKEX_PASSPHRASE"
+    ]
+  }
+}
