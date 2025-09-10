@@ -352,7 +352,7 @@ The smart contract implements a comprehensive price oracle system:
 ```csharp
 [DisplayName("EpicChainPriceOracle")]
 [ManifestExtra("Author", "EpicChain Labs")]
-[ManifestExtra("Email", "info@epicchain.org")]
+[ManifestExtra("Email", "devs@epic-chain.org")]
 [ManifestExtra("Description", "Decentralized Price Oracle Contract")]
 public class EpicChainPriceOracle : SmartContract
 {
